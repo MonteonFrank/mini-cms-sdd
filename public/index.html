@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mini CMS</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --border: #d6d9de;
+        --muted: #6b7280;
+      }
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        max-width: 640px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+      }
+      h1 {
+        margin-bottom: 0.25rem;
+      }
+      form {
+        display: grid;
+        gap: 0.5rem;
+        margin: 1.5rem 0;
+      }
+      input,
+      textarea,
+      button {
+        font: inherit;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        gap: 0.75rem;
+      }
+      li {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+      }
+      li header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+      li h2 {
+        font-size: 1.05rem;
+        margin: 0;
+      }
+      li p {
+        margin: 0.5rem 0 0;
+        white-space: pre-wrap;
+      }
+      .delete {
+        border: none;
+        padding: 0.25rem 0.5rem;
+        color: #b91c1c;
+      }
+      .status {
+        min-height: 1.5rem;
+        color: var(--muted);
+      }
+      .status[data-error="true"] {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mini CMS</h1>
+    <p class="status" id="status"></p>
+
+    <form id="create-form">
+      <input id="title" name="title" placeholder="Post title" required />
+      <textarea id="content" name="content" rows="4" placeholder="Post content" required></textarea>
+      <button type="submit">Create post</button>
+    </form>
+
+    <ul id="posts"></ul>
+
+    <script>
+      const API = '';
+      const statusEl = document.getElementById('status');
+      const listEl = document.getElementById('posts');
+      const formEl = document.getElementById('create-form');
+
+      function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.dataset.error = String(isError);
+      }
+
+      function render(posts) {
+        listEl.replaceChildren();
+
+        if (posts.length === 0) {
+          const empty = document.createElement('li');
+          empty.textContent = 'No posts yet.';
+          listEl.append(empty);
+          return;
+        }
+
+        for (const post of posts) {
+          const item = document.createElement('li');
+
+          const header = document.createElement('header');
+          const title = document.createElement('h2');
+          title.textContent = post.title;
+
+          const remove = document.createElement('button');
+          remove.className = 'delete';
+          remove.type = 'button';
+          remove.textContent = 'Delete';
+          remove.addEventListener('click', () => deletePost(post.id));
+
+          header.append(title, remove);
+
+          const body = document.createElement('p');
+          body.textContent = post.content;
+
+          item.append(header, body);
+          listEl.append(item);
+        }
+      }
+
+      async function loadPosts() {
+        try {
+          const res = await fetch(`${API}/posts`);
+          if (!res.ok) throw new Error(`GET /posts failed (${res.status})`);
+          render(await res.json());
+          setStatus('');
+        } catch (err) {
+          setStatus(err.message, true);
+        }
+      }
+
+      async function deletePost(id) {
+        try {
+          const res = await fetch(`${API}/posts/${id}`, { method: 'DELETE' });
+          if (res.status === 404) throw new Error('Post not found.');
+          if (!res.ok) throw new Error(`DELETE /posts/${id} failed (${res.status})`);
+          await loadPosts();
+        } catch (err) {
+          setStatus(err.message, true);
+        }
+      }
+
+      formEl.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const payload = {
+          title: document.getElementById('title').value.trim(),
+          content: document.getElementById('content').value.trim(),
+        };
+
+        try {
+          const res = await fetch(`${API}/posts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (res.status === 400) throw new Error('Title and content are required.');
+          if (!res.ok) throw new Error(`POST /posts failed (${res.status})`);
+
+          formEl.reset();
+          await loadPosts();
+        } catch (err) {
+          setStatus(err.message, true);
+        }
+      });
+
+      loadPosts();
+    </script>
+  </body>
+</html>

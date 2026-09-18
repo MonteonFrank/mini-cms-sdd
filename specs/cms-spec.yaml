@@ -1,0 +1,109 @@
+openapi: 3.0.0
+info:
+  title: Mini CMS API
+  version: 1.0.0
+paths:
+  /posts:
+    get:
+      summary: Get all blog posts
+      description: Returns every blog post currently stored.
+      responses:
+        '200':
+          description: A list of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+    post:
+      summary: Create a new blog post
+      description: Creates a blog post from a title and content.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPost'
+      responses:
+        '201':
+          description: The created post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /posts/{id}:
+    get:
+      summary: Get a single blog post by ID
+      description: Returns the blog post with the given ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A single post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete a single blog post by ID
+      description: Deletes the blog post with the given ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Post deleted successfully
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Post:
+      type: object
+      required: [id, title, content]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+    NewPost:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string 
