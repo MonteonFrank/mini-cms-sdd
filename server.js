@@ -40,6 +40,25 @@ app.post('/posts', (req, res) => {
   res.status(201).json(post);
 });
 
+app.put('/posts/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const post = Number.isInteger(id) ? posts.find((p) => p.id === id) : undefined;
+
+  if (!post) {
+    return res.status(404).json({ error: 'Post not found' });
+  }
+
+  const { title, content } = req.body ?? {};
+
+  if (typeof title !== 'string' || typeof content !== 'string') {
+    return res.status(400).json({ error: 'title and content must be strings' });
+  }
+
+  post.title = title;
+  post.content = content;
+  res.status(200).json(post);
+});
+
 app.delete('/posts/:id', (req, res) => {
   const id = Number(req.params.id);
   const index = Number.isInteger(id) ? posts.findIndex((p) => p.id === id) : -1;

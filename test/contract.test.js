@@ -34,6 +34,33 @@ const scenarios = {
     },
     { status: '404', run: () => request(app).get('/posts/999999') },
   ],
+  'put /posts/{id}': [
+    {
+      status: '200',
+      run: async () => {
+        const created = await request(app)
+          .post('/posts')
+          .send({ title: 't', content: 'c' });
+        return request(app)
+          .put(`/posts/${created.body.id}`)
+          .send({ title: 'updated', content: 'updated' });
+      },
+    },
+    {
+      status: '400',
+      run: async () => {
+        const created = await request(app)
+          .post('/posts')
+          .send({ title: 't', content: 'c' });
+        return request(app).put(`/posts/${created.body.id}`).send({ title: 'only' });
+      },
+    },
+    {
+      status: '404',
+      run: () =>
+        request(app).put('/posts/999999').send({ title: 't', content: 'c' }),
+    },
+  ],
   'delete /posts/{id}': [
     {
       status: '204',

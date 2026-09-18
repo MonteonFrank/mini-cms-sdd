@@ -1,3 +1,7 @@
+
+#this is a test 
+
+
 openapi: 3.0.0
 info:
   title: Mini CMS API
@@ -56,6 +60,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Post'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update a blog post by ID
+      description: Replaces the title and content of the blog post with the given ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPost'
+      responses:
+        '200':
+          description: The updated post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Post not found
           content:
